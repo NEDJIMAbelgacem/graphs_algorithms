@@ -1,26 +1,7 @@
 #include "stdafx.h"
 #include "graphs.h"
 
-t_adjList graphs::input_graph() {
-	int nv, ne;
-	cout << "vertice count : ";
-	cin >> nv;
-	cout << "edges count : ";
-	cin >> ne;
-	cout << "is the graph undirected ? [Y / n] : ";
-	char c;
-	cin >> c;
-	t_adjList adj_lst;
-	for (int i = 0; i < ne; ++i) adj_lst[i];
-	cout << "input the edges with their respective weight : " << endl;
-	for (int i = 0; i < ne; ++i) {
-		int a, b, w;
-		cin >> a >> b >> w;
-		adj_lst[a].insert(vector<int>{ b, w });
-		if (c == 'y' || c == 'Y') adj_lst[b].insert(vector<int>{ a, w });
-	}
-	return adj_lst;
-}
+//using namespace graphs;
 
 t_adjList graphs::from_adjMatrix_to_adjList(t_adjMatrix& adjMatrix, int n) {
 	map<int, set<vector<int>>> m;
@@ -90,6 +71,17 @@ t_adjList graphs::from_edgesList_to_adjList(t_edgesList& edgesList, int n) {
 	return m;
 }
 
+t_adjList graphs::transpose_graph(t_adjList& adj_list, int n) {
+	t_adjList transpose_adj_list;
+	for (int u = 0; u < n; ++u) transpose_adj_list[u].clear();
+	for (int u = 0; u < n; ++u) {
+		for (vector<int> e : adj_list[u]) {
+			transpose_adj_list[e[0]].insert(vector<int>{u, e[1]});
+		}
+	}
+	return transpose_adj_list;
+}
+
 int graphs::min_spanning_tree_Kruskal(t_edgesList& edgesList, int n, vector<int>& mst_tree) {
 	mst_tree.clear();
 	for (int i = 0; i < n; ++i) mst_tree.push_back(i);
@@ -101,7 +93,7 @@ int graphs::min_spanning_tree_Kruskal(t_edgesList& edgesList, int n, vector<int>
 		int a = edgesList[i][0], b = edgesList[i][1];
 		while (mst_tree[a] != a) a = mst_tree[a];
 		while (mst_tree[b] != b) b = mst_tree[b];
-		w = edgesList[i][2];
+		int w = edgesList[i][2];
 		if (a != b) {
 			mst_tree[a] = b;
 			tree_weight += w;
@@ -182,7 +174,7 @@ void graphs::depth_first_search(t_adjList& adjList, int n, int source, vector<in
 	}
 }
 
-void graphs::shortest_path_djikstra(t_adjList& adjList, int n, int source, vector<int>& path_tree, vector<int>& distance) {
+void graphs::shortest_path_Djikstra(t_adjList& adjList, int n, int source, vector<int>& path_tree, vector<int>& distance) {
 	distance.resize(n, INF);
 	distance[source] = 0;
 	path_tree.clear();
@@ -211,16 +203,141 @@ void graphs::shortest_path_djikstra(t_adjList& adjList, int n, int source, vecto
 	}
 }
 
-void graphs::shortest_path_bellman_ford(t_adjList& adjList, int n, int source, vector<int>& path_tree, vector<int>& distance) {
-	distance.resize(n, INF);
+bool graphs::shortest_path_Bellman_Ford(t_edgesList& edgesList, int n, int source, vector<int>& path_tree, vector<int>& distance) {
 	path_tree.clear();
 	for (int i = 0; i < n; ++i) path_tree.push_back(i);
-	for (int u = 0; u < n; ++u) {
-		for (vector<int> e : adjList[u]) {
-			if (distance[u] + e[1] < distance[e[0]]) {
-				distance[e[0]] = distance[u] + e[1];
-				path_tree[e[0]] = u;
+	distance.resize(n, INF);
+	distance[source] = 0;
+	for (int i = 0; i < n - 1; ++i) {
+		for (vector<int> e : edgesList) {
+			// relax edges and avoid overflows
+			if (distance[e[0]] != INF && distance[e[0]] + e[2] < distance[e[1]]) {
+				distance[e[1]] = distance[e[0]] + e[2];
+				path_tree[e[1]] = e[0];
 			}
+		}
+	}
+	bool has_negative_cycle = false;
+	for (vector<int> e : edgesList) {
+		if (distance[e[0]] != INF && distance[e[0]] + e[2] < distance[e[1]]) {
+			has_negative_cycle = true;
+			break;
+		}
+	}
+	return has_negative_cycle;
+}
+
+void graphs::shortest_path_Floyd_Warshal(t_edgesList& edgesList, int n, vector<vector<int>>& distances) {
+	distances.resize(n, vector<int>(n, INF));
+	for (vector<int> e : edgesList) distances[e[0]][e[1]] = e[2];
+	for (int u = 0; u < n; ++u) distances[u][u] = 0;
+	for (int u = 0; u < n; ++u) {
+		for (int v = 0; v < n; ++v) {
+			for (int i = 0; i < n; ++i) {
+				if (distances[u][i] + distances[i][v] < distances[u][v]) distances[u][v] = distances[u][i] + distances[i][v];
+			}
+		}
+	}
+}
+
+void graphs::strongly_connected_components_Kusaraju(t_adjList& adjList, int n, vector<int>& graph_partition) {
+	graph_partition.resize(n);
+	t_adjList transpose_adjList = graphs::transpose_graph(adjList, n);
+	vector<bool> assigned(n, false);
+	int nb_visited = 0;
+	int min_subset = 0;
+	int r = 0;
+	while (r != n) {
+		vector<int> out_visited(n, false);
+		vector<int> in_visited(n, false);
+		deque<int> visit_q;
+		visit_q.push_back(r);
+		while (!visit_q.empty()) {
+			int q_len = visit_q.size();
+			for (int i = 0; i < q_len; ++i) {
+				int u = visit_q.front();
+				visit_q.pop_front();
+				visit_q.push_back(u);
+				out_visited[u] = true;
+			}
+			while (q_len--) {
+				int u = visit_q.front();
+				visit_q.pop_front();
+				for (vector<int> e : adjList[u]) {
+					if (!out_visited[e[0]]) visit_q.push_back(e[0]);
+				}
+			}
+		}
+		visit_q.push_back(r);
+		while (!visit_q.empty()) {
+			int q_len = visit_q.size();
+			for (int i = 0; i < q_len; ++i) {
+				int u = visit_q.front();
+				visit_q.pop_front();
+				visit_q.push_back(u);
+				in_visited[u] = true;
+			}
+			while (q_len--) {
+				int u = visit_q.front();
+				visit_q.pop_front();
+				for (vector<int> e : transpose_adjList[u]) {
+					if (!in_visited[e[0]]) visit_q.push_back(e[0]);
+				}
+			}
+		}
+		r = n;
+		for (int i = 0; i < n; ++i) {
+			if (out_visited[i] && in_visited[i]) {
+				graph_partition[i] = min_subset;
+				assigned[i] = true;
+			}
+			else if (!assigned[i] && r == n) r = i;
+		}
+		min_subset++;
+	}
+}
+
+void graphs::__tarjan_depth_first_search(t_adjList& adjList, int n, int u, vector<bool>& in_stack, stack<int>& dfs_stack, vector<int>& index, vector<int>& low_index, int& visit_t, vector<int>& graph_partition) {
+	dfs_stack.push(u);
+	in_stack[u] = true;
+	low_index[u] = index[u] = visit_t;
+	visit_t++;
+	for (vector<int> e : adjList[u]) {
+		int v = e[0];
+		if (index[v] == -1) {
+			__tarjan_depth_first_search(adjList, n, v, in_stack, dfs_stack, index, low_index, visit_t, graph_partition);
+			low_index[u] = MIN(low_index[u], low_index[v]);
+		}
+		else if (in_stack[v]) {
+			low_index[u] = MIN(low_index[u], index[v]);
+		}
+	}
+
+	int w;
+	if (low_index[u] == index[u])
+	{
+		while ((w = dfs_stack.top()) != u)
+		{
+			graph_partition[w] = u;
+			dfs_stack.pop();
+			in_stack[w] = false;
+		}
+		dfs_stack.pop();
+		in_stack[w] = false;
+	}
+}
+
+void graphs::strongly_connected_components_Tarjan(t_adjList& adjList, int n, vector<int>& graph_partition) {
+	graph_partition.resize(n);
+	for (int i = 0; i < n; ++i) graph_partition[i] = i;
+	vector<bool> in_stack(n, false);
+	stack<int> dfs_stack;
+	vector<int> index(n, -1);
+	vector<int> low_index(n, -1);
+	int visit_t = 0;
+	for (int u = 0; u < n; ++u) {
+		if (index[u] == -1) {
+			__tarjan_depth_first_search(adjList, n, u, in_stack, dfs_stack, index, low_index, visit_t, graph_partition);
 		}
 	}
 }
