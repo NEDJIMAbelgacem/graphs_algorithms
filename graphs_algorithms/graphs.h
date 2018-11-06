@@ -40,5 +40,8 @@ namespace graphs
 	void strongly_connected_components_Kusaraju(t_adjList& adjList, int n, vector<int>& graph_partition);
 	void __tarjan_depth_first_search(t_adjList& adjList, int n, int u, vector<bool>& in_stack, stack<int>& dfs_stack, vector<int>& index, vector<int>& low_index, int& visit_t, vector<int>& graph_partition);
 	void strongly_connected_components_Tarjan(t_adjList& adjList, int n, vector<int>& graph_partition);
+	// graph coloring
+	int coloring_welsh_powell(t_adjList& adjList, int nb_vertices, vector<int>& graph_coloring);
+	int coloring_dsatur(t_adjList& adjList, int nb_vertices, vector<int>& graph_coloring);
 };
 

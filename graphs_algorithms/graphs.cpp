@@ -341,3 +341,72 @@ void graphs::strongly_connected_components_Tarjan(t_adjList& adjList, int n, vec
 		}
 	}
 }
+
+int graphs::coloring_welsh_powell(t_adjList& adjList, int nb_vertices, vector<int>& graph_coloring) {
+	graph_coloring.resize(nb_vertices, -1);
+	vector<int> vertices(nb_vertices);
+	vector<int> degree(nb_vertices);
+	for (int i = 0; i < nb_vertices; ++i) {
+		vertices[i] = i;
+		degree[i] = adjList[i].size();
+	}
+	sort(vertices.begin(), vertices.end(), [degree](int i, int j) -> bool {
+		return degree[i] > degree[j];
+	});
+	int max_color = -1;
+	for (int v : vertices) {
+		// find the minimum unused color
+		set<int> color_set;
+		for (int i = max_color + 1; i >= 0; --i) color_set.insert(i);
+		for (vector<int> e : adjList[v]) {
+			if (color_set.find(graph_coloring[e[0]]) != color_set.end()) color_set.erase(graph_coloring[e[0]]);
+		}
+		int color = *min_element(color_set.begin(), color_set.end());
+		if (color > max_color) max_color = color;
+		graph_coloring[v] = color;
+	}
+	return max_color + 1;
+}
+
+int graphs::coloring_dsatur(t_adjList& adjList, int nb_vertices, vector<int>& graph_coloring) {
+	graph_coloring.resize(nb_vertices, -1);
+	vector<int> vertice_degree(nb_vertices, -1);
+	for (int i = 0; i < nb_vertices; ++i) vertice_degree[i] = adjList[i].size();
+	int current_vertice = 0;
+	for (int i = 1; i < nb_vertices; ++i) {
+		if (vertice_degree[current_vertice] < vertice_degree[i]) current_vertice = i;
+	}
+
+	auto calculate_chromatic_degree = [&adjList, &graph_coloring](int u) -> int {
+		set<int> colors;
+		for (vector<int> e : adjList[u]) colors.insert(graph_coloring[e[0]]);
+		return colors.size();
+	};
+	graph_coloring[current_vertice] = 0;
+	int max_color = 0;
+	for (int _ = 0; _ < nb_vertices - 1; ++_) {
+		current_vertice = -1;
+		int vertice_chromatic_degree = -1;
+		for (int i = 0; i < nb_vertices; ++i) {
+			// already colored
+			if (graph_coloring[i] != -1) continue;
+			// calculate the number of neighbouring colors
+			int chromatic_degree = calculate_chromatic_degree(i);
+			if (vertice_chromatic_degree < chromatic_degree || (vertice_chromatic_degree == chromatic_degree && vertice_degree[i] > vertice_degree[current_vertice])) {
+				current_vertice = i;
+				vertice_chromatic_degree = chromatic_degree;
+			}
+		}
+
+		// find the minimum unused color
+		set<int> color_set;
+		for (int i = max_color + 1; i >= 0; --i) color_set.insert(i);
+		for (vector<int> e : adjList[current_vertice]) {
+			if (color_set.find(graph_coloring[e[0]]) != color_set.end()) color_set.erase(graph_coloring[e[0]]);
+		}
+		int color = *min_element(color_set.begin(), color_set.end());
+		graph_coloring[current_vertice] = color;
+		if (color > max_color) max_color = color;
+	}
+	return max_color + 1;
+}
