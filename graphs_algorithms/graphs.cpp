@@ -83,19 +83,25 @@ t_adjList graphs::transpose_graph(t_adjList& adj_list, int n) {
 }
 
 int graphs::min_spanning_tree_Kruskal(t_edgesList& edgesList, int n, vector<int>& mst_tree) {
-	mst_tree.clear();
-	for (int i = 0; i < n; ++i) mst_tree.push_back(i);
+	vector<int> parent(n);
+	mst_tree.resize(n);
+	for (int i = 0; i < n; ++i) {
+		mst_tree[i] = parent[i] = i;
+	}
 	int tree_weight = 0;
-	sort(edgesList.begin(), edgesList.end(), [](vector<int> v1, vector<int> v2) -> bool {return v1[2] < v2[2]; });
+	sort(edgesList.begin(), edgesList.end(), [](vector<int> v1, vector<int> v2) -> bool { return v1[2] < v2[2]; });
 	int i = 0;
 	int edges_count = 0;
 	while (i < edgesList.size() && edges_count < n - 1) {
-		int a = edgesList[i][0], b = edgesList[i][1];
-		while (mst_tree[a] != a) a = mst_tree[a];
-		while (mst_tree[b] != b) b = mst_tree[b];
+		int u = edgesList[i][0], v = edgesList[i][1];
+		int a = u, b = v;
 		int w = edgesList[i][2];
+		while (parent[a] != a) a = parent[a];
+		while (parent[b] != b) b = parent[b];
 		if (a != b) {
-			mst_tree[a] = b;
+			if (mst_tree[u] != u) mst_tree[v] = u;
+			else mst_tree[u] = v;
+			parent[a] = b;
 			tree_weight += w;
 			++edges_count;
 		}
@@ -104,26 +110,29 @@ int graphs::min_spanning_tree_Kruskal(t_edgesList& edgesList, int n, vector<int>
 	return tree_weight;
 }
 
-int graphs::min_spanning_tree_Prim(t_adjList& adjList, int n, vector<int>& mst_tree) {
+int graphs::min_spanning_tree_Prim(t_adjMatrix& adjMatrix, int n, vector<int>& mst_tree) {
 	mst_tree.clear();
 	for (int i = 0; i < n; ++i) mst_tree.push_back(i);
 	int mst_weight = 0;
 
-	vector<int> included(n, false);
-	auto cmp_edge = [](pair<int, int> i, pair<int, int> j) -> bool {
-		return i.second > j.second;
+	vector<int> weight(n, INF);
+	set<int> not_included_v;
+	for (int i = 0; i < n; ++i) not_included_v.insert(i);
+
+	weight[0] = 0;
+	auto cmp = [&weight](int i, int j) -> bool {
+		return weight[i] < weight[j];
 	};
-	priority_queue<pair<int, int>, vector<pair<int, int>>, decltype(cmp_edge)> q(cmp_edge);
-	q.push(pair<int, int>(0, 0));
-	while (q.size() != 0) {
-		pair<int, int> p = q.top();
-		int u = p.first;
-		q.pop();
-		mst_weight += p.second;
-		for (vector<int> e : adjList[u]) {
-			int v = e[0], w = e[1];
-			if (included[v]) continue;
-			q.push(pair<int, int>(v, w));
+
+	for (int _ = 0; _ < n - 1; ++_) {
+		int u = *min_element(not_included_v.begin(), not_included_v.end(), cmp);
+		not_included_v.erase(u);
+		for (int v = 0; v < n; ++v) {
+			if (adjMatrix[u][v] > 0 && not_included_v.find(v) != not_included_v.end() && weight[v] > weight[u] + adjMatrix[u][v]) {
+				weight[v] = weight[u] + adjMatrix[u][v];
+				mst_tree[v] = u;
+				mst_weight += adjMatrix[u][v];
+			}
 		}
 	}
 	return mst_weight;
@@ -204,8 +213,8 @@ void graphs::shortest_path_Djikstra(t_adjList& adjList, int n, int source, vecto
 }
 
 bool graphs::shortest_path_Bellman_Ford(t_edgesList& edgesList, int n, int source, vector<int>& path_tree, vector<int>& distance) {
-	path_tree.clear();
-	for (int i = 0; i < n; ++i) path_tree.push_back(i);
+	path_tree.resize(n);
+	for (int i = 0; i < n; ++i) path_tree[i] = i;
 	distance.resize(n, INF);
 	distance[source] = 0;
 	for (int i = 0; i < n - 1; ++i) {

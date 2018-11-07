@@ -18,3 +18,5 @@
         and the last one is its weight.
       **the vertices indexes are 0 indexed and labeled from 0 to N - 1 inclusive**
     After that if the file is correctly formated you should get a list of the algorithms you can perform on the graph
+  # Important notes :
+    * be aware of windows file system ie file names and folder names should never contain spaces.

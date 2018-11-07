@@ -6,10 +6,11 @@
 #include <algorithm>
 #include <queue>
 #include <stack>
+#include <limits>
 
 #define MIN(x, y) ((x) > (y) ? (y) : (x))
 #define MAX(x, y) ((x) < (y) ? (y) : (x))
-#define INF 1 << 30
+#define INF (numeric_limits<int>::max() >> 2)
 
 using namespace std;
 using t_adjList = map<int, set<vector<int>>>;
@@ -28,7 +29,7 @@ namespace graphs
 	t_adjList transpose_graph(t_adjList& edgesList, int n);
 	// minimum spanning tree algorithms
 	int min_spanning_tree_Kruskal(t_edgesList& edgesList, int n, vector<int>& mst_tree);
-	int min_spanning_tree_Prim(t_adjList& adjList, int n, vector<int>& mst_tree);
+	int min_spanning_tree_Prim(t_adjMatrix& adjMatrix, int n, vector<int>& mst_tree);
 	// graph traversal algorithms
 	void depth_first_search(t_adjList& adjList, int n, int source, vector<int>& path_tree);
 	void breadth_first_search(t_adjList& adjList, int n, int source, vector<int>& path_tree);
