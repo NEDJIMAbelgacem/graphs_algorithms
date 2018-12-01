@@ -13,6 +13,7 @@
 #define INF (numeric_limits<int>::max() >> 2)
 
 using namespace std;
+// an edge in the adjacency matrix is represented as [vertice, weight]
 using t_adjList = map<int, set<vector<int>>>;
 using t_adjMatrix = vector<vector<int>>;
 using t_edgesList = vector<vector<int>>;
@@ -44,5 +45,8 @@ namespace graphs
 	// graph coloring
 	int coloring_welsh_powell(t_adjList& adjList, int nb_vertices, vector<int>& graph_coloring);
 	int coloring_dsatur(t_adjList& adjList, int nb_vertices, vector<int>& graph_coloring);
+	// flow algorithms
+	bool is_flow_network(t_adjList& adjList, int nb_vertices);
+	bool is_compapatible_flow_network(t_adjList& adjList, int nb_vertices);
 };
 

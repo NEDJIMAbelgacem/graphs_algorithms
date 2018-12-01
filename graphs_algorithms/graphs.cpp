@@ -419,3 +419,68 @@ int graphs::coloring_dsatur(t_adjList& adjList, int nb_vertices, vector<int>& gr
 	}
 	return max_color + 1;
 }
+
+bool graphs::is_flow_network(t_adjList& adjList, int nb_vertices) {
+	// pair<int, int>::first : outdegree
+	// pair<int, int>::second : indegree
+	map<int, pair<int, int>> degrees;
+	for (int i = 0; i < nb_vertices; ++i) degrees[i] = make_pair(0, 0);
+	for (const pair<int, set<vector<int>>>& p : adjList) {
+		int u = p.first;
+		for (vector<int> vect : p.second) {
+			int v = vect[0];
+			degrees[u].first += 1;
+			degrees[v].second += 1;
+		}
+	}
+	int nb_sinks = 0, nb_sources = 0;
+	for (pair<int, pair<int, int>> p : degrees) {
+		pair<int, int>& p2 = p.second;
+		if (p2.first > 0 && p2.second > 0) continue;
+		if (p2.first == 0) nb_sources++;
+		if (p2.second == 0) nb_sinks++;
+	}
+	return nb_sinks == 1 && nb_sources == 1;
+}
+
+bool graphs::is_compapatible_flow_network(t_adjList& adjList, int nb_vertices) {
+	// pair<int, int>::first : outdegree
+	// pair<int, int>::second : indegree
+	map<int, pair<int, int>> degrees;
+	map<int, int> node_value;
+	for (int i = 0; i < nb_vertices; ++i) {
+		degrees[i] = make_pair(0, 0);
+		node_value[i] = 0;
+	}
+	for (const pair<int, set<vector<int>>>& p : adjList) {
+		int u = p.first;
+		for (vector<int> vect : p.second) {
+			int v = vect[0];
+			int w = vect[1];
+			degrees[u].first += 1;
+			degrees[v].second += 1;
+			node_value[u] -= w;
+			node_value[v] += w;
+		}
+	}
+	int nb_sinks = 0, nb_sources = 0;
+	int source = -1, sink = -1;
+	for (pair<int, pair<int, int>> p : degrees) {
+		pair<int, int>& p2 = p.second;
+		if (p2.first > 0 && p2.second > 0) continue;
+		if (p2.first == 0) {
+			nb_sources++;
+			source = p.first;
+		}
+		if (p2.second == 0) {
+			nb_sinks++;
+			sink = p.first;
+		}
+	}
+	if (nb_sinks != 1 || nb_sources != 1) return false;
+	for (int i = 0; i < nb_vertices; ++i) {
+		if (i == sink || i == source) continue;
+		if (node_value[i] != 0) return false;
+	}
+	return true;
+}
