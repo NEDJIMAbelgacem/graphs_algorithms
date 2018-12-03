@@ -484,3 +484,65 @@ bool graphs::is_compapatible_flow_network(t_adjList& adjList, int nb_vertices) {
 	}
 	return true;
 }
+
+string graphs::convert_to_dot_language(t_adjMatrix& adjMatrix, int nb_vertices, GType type) {
+	string s = "";
+	switch (type)
+	{
+	case Graph:
+		s += "graph {\n";
+		for (int i = 0; i < nb_vertices; ++i) {
+			for (int j = i + 1; j < nb_vertices; ++j) {
+				int w = adjMatrix[i][j];
+				if (w == -1) continue;
+				s += "\t" + to_string(i) + " -- " + to_string(j) + "; \n";
+			}
+		}
+		s += "}";
+		break;
+	case DiGraph:
+		s += "digraph {\n";
+		for (int i = 0; i < nb_vertices; ++i) {
+			for (int j = 0; j < nb_vertices; ++j) {
+				int w = adjMatrix[i][j];
+				if (w == -1) continue;
+				s += to_string(i) + " -> " + to_string(j) + "; \n";
+			}
+		}
+		s += "}";
+		break;
+	case WGraph:
+		s += "graph {\n";
+		for (int i = 0; i < nb_vertices; ++i) {
+			for (int j = i + 1; j < nb_vertices; ++j) {
+				int w = adjMatrix[i][j];
+				if (w == -1) continue;
+				s += to_string(i) + " -- " + to_string(j) + "[label=" + to_string(w) + "]" + "; \n";
+			}
+		}
+		s += "}";
+		break;
+	case WDiGraph:
+		s += "digraph {\n";
+		for (int i = 0; i < nb_vertices; ++i) {
+			for (int j = i + 1; j < nb_vertices; ++j) {
+				int w = adjMatrix[i][j];
+				if (w == -1) continue;
+				s += to_string(i) + " -> " + to_string(j) + "[label=" + to_string(w) + "]" + "; \n";
+			}
+		}
+		s += "}";
+		break;
+	}
+	return s;
+}
+
+void graphs::render_dot_formatted_graph(string dot, string file_name) {
+	filebuf fb;
+	fb.open(file_name + ".txt", ios::out);
+	ostream os(&fb);
+	os << dot << endl;
+	fb.close();
+	string cmd = "dot -Tpng " + file_name + ".txt" + " -o " + file_name + ".png";
+	system(cmd.data());
+}

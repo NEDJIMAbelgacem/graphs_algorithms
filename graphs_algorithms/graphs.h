@@ -1,11 +1,13 @@
 #pragma once
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <set>
 #include <map>
 #include <algorithm>
 #include <queue>
 #include <stack>
+#include <string>
 #include <limits>
 
 #define MIN(x, y) ((x) > (y) ? (y) : (x))
@@ -20,6 +22,12 @@ using t_edgesList = vector<vector<int>>;
 
 namespace graphs
 {
+	// Graphs types
+	// Graph : undirected weighted graph
+	// DiGraph : directed weighted graph
+	// WGraph : weighted undirected graph
+	// WDiGraph : weighted directed graph
+	enum GType { Graph, DiGraph, WGraph, WDiGraph };
 	// graph representations conversion
 	t_adjList from_adjMatrix_to_adjList(t_adjMatrix& adjMatrix, int n);
 	t_edgesList from_adjMatrix_to_edgesList(t_adjMatrix& adjMatrix, int n);
@@ -48,5 +56,8 @@ namespace graphs
 	// flow algorithms
 	bool is_flow_network(t_adjList& adjList, int nb_vertices);
 	bool is_compapatible_flow_network(t_adjList& adjList, int nb_vertices);
+	// graph drawing with graphviz & dot language
+	string convert_to_dot_language(t_adjMatrix& adjMatrix, int nb_vertices, GType type);
+	void render_dot_formatted_graph(string dot, string file_name);
 };
 
