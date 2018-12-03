@@ -30,5 +30,11 @@
     * Tarjan strongly connected components.
     * Welsh-Powell graph coloring.
     * DSATUR graph coloring.
+	* Flow network verification (sink & source existance).
+	* Compatible flow network verification (Kirchhoff law compliance).
+	* Conversion to dot language.
+	* Rendering the graph to .png format using graphviz cli tools.
+  # Dependencies :
+    * You need to have graphviz installed properly and its %ROOT%\bin path added to envinment variables.
   # Important notes :
     * be aware of windows file system ie file names and folder names should never contain spaces.
